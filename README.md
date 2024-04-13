@@ -1,2 +1,3 @@
 # impatient-client-queue
-A basic complex system problem
+
+This project aims to implement a program that simulates a queue
