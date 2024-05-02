@@ -1,6 +1,6 @@
 
 n = number of lines
-lambda = exponential distribution param, entry rate modeling
-th = time taken when serving someone
+lambda = queueing rate
+mu = cashier serving rate
 T = Total time taken to take the mean of rejection and agreement
 N = iteration number
