@@ -21,7 +21,7 @@ def simulate_one_instance(config: dict):
     time = 0
     forfeit = 0
     # No one was served
-    served = -1
+    served = 0
     proportion = -1
     waiting_max = -1
 
@@ -33,11 +33,11 @@ def simulate_one_instance(config: dict):
 
     while (True):
         # Arrival interval
-        arrival_interval = np.random.exponential(config['lambda'])
-        tmp = time + arrival_interval
+        arrival_interval = np.random.exponential(1 / config['lambda'])
+        time += arrival_interval
 
         # Check to return
-        if (tmp > config['T']):
+        if (time > config['T']):
             return {
                 'served': served,
                 'forfeit': forfeit,
@@ -45,7 +45,6 @@ def simulate_one_instance(config: dict):
                 'waiting_max': waiting_max
             }
 
-        time = tmp
         total_joined_queue += 1
         queue.append(time)
 
@@ -54,10 +53,16 @@ def simulate_one_instance(config: dict):
         # Serving
         while (cashier[lowest_cashier_time_index] <= time and
                 served < total_joined_queue):
+
+
+            serving_interval = np.random.exponential(1 / config['mu'])
+
+            cashier[lowest_cashier_time_index] = np.max([cashier[lowest_cashier_time_index],
+                                                        queue[served]]) + serving_interval
+            waiting_max = np.max([waiting_max,
+                                 np.abs(cashier[lowest_cashier_time_index] - queue[served])])
             served += 1
-            serving_interval = np.random.exponential(config['mu'])
-            cashier[lowest_cashier_time_index] = np.max([cashier[lowest_cashier_time_index], queue[served]]) + serving_interval
-            waiting_max = np.max([waiting_max, np.abs(cashier[lowest_cashier_time_index] - queue[served])])
+            lowest_cashier_time_index = np.argmin(cashier)
 
         curr_queue_size = np.max([0, (total_joined_queue - 1) - served])
 
@@ -67,6 +72,7 @@ def simulate_one_instance(config: dict):
         if (client_forfeit == 1):
             total_joined_queue -= 1
             forfeit += 1
+            queue.pop()
 
         # Calculate the current queue size
         curr_queue_size = total_joined_queue - served
@@ -99,8 +105,8 @@ def main(config: dict):
             add_elem(proportion_list, simulation_result['proportion'])
             add_elem(waiting_max_list, simulation_result['waiting_max'])
 
-        repeat_counter += 1
-        confidence_interval = calculate_confidence_interval(np.std(proportion_list))
+        std_error_value = std_error(np.std(proportion_list), config['N'])
+        confidence_interval = calculate_confidence_interval(std_error_value)
         add_elem(partial_mean_proportion_list, np.mean(proportion_list))
         add_elem(partial_mean_waiting_max_list, np.mean(waiting_max_list))
 
